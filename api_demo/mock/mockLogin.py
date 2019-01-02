@@ -15,13 +15,13 @@ class login(object):
         userName = query['userName'][0]
         password = query['password'][0]
         verifyCode = query['verifyCode'][0]
-        if osign != util.md5(userName +password+verifyCode) or verifyCode !='123456':
+        if osign != util.md5(userName +password+verifyCode) or verifyCode !='123456':      # 签名不匹配，或者验证码错误
             data['code']=4010
             data['msg']='invalid request!'
-        elif userName !='correctuser' or password !='correctpassword' :
+        elif userName !='correctuser' or password !='correctpassword' :                # 用户名或密码错误
             data['code']=500
             data['msg']='username or password is wrong ,please try again!'
-        else:
+        else:                                                                               # 正常登录
             data['code']=200
             data['msg']='success!'
             data['loginTime'] = self.loginTime

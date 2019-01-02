@@ -37,16 +37,23 @@ api_demo.mock     示例如何为登录接口生成mock 数据。
 #### 使用说明： 如果接口已开发完成，可以使用，可忽略这步。
 
 ```
-if query['osign'][0] != util.md5(query['userName'][0] +query['password'][0]+query['verifyCode'][0]) or query['verifyCode'][0] !='123456':
-    data['code']=4010
-    data['msg']='invalid request!'
-elif query['userName'][0] !='correctuser' or query['password'][0] !='correctpassword' :
-    data['code']=500
-    data['msg']='username or password is wrong ,please try again!'
-else:
-    data['code']=200
-    data['msg']='success!'
-    data['loginTime'] = self.loginTime
+def login(self,query):
+    data = {}
+    osign = query['osign'][0]
+    userName = query['userName'][0]
+    password = query['password'][0]
+    verifyCode = query['verifyCode'][0]
+    if osign != util.md5(userName +password+verifyCode) or verifyCode !='123456':      # 签名不匹配，或者验证码错误
+        data['code']=4010
+        data['msg']='invalid request!'
+    elif userName !='correctuser' or password !='correctpassword' :                # 用户名或密码错误
+        data['code']=500
+        data['msg']='username or password is wrong ,please try again!'
+    else:                                                                               # 正常登录
+        data['code']=200
+        data['msg']='success!'
+        data['loginTime'] = self.loginTime
+    return data
 ```
 
 ### 3. 测试用例
