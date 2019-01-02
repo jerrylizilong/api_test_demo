@@ -11,11 +11,14 @@ class login(object):
 
     def login(self,query):
         data = {}
-
-        if query['osign'][0] != util.md5(query['userName'][0] +query['password'][0]+query['verifyCode'][0]) or query['verifyCode'][0] !='123456':
+        osign = query['osign'][0]
+        userName = query['userName'][0]
+        password = query['password'][0]
+        verifyCode = query['verifyCode'][0]
+        if osign != util.md5(userName +password+verifyCode) or verifyCode !='123456':
             data['code']=4010
             data['msg']='invalid request!'
-        elif query['userName'][0] !='correctuser' or query['password'][0] !='correctpassword' :
+        elif userName !='correctuser' or password !='correctpassword' :
             data['code']=500
             data['msg']='username or password is wrong ,please try again!'
         else:
