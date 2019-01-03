@@ -58,3 +58,10 @@ def hBody(j, needRE='0'):
         body = re.sub(r'\\', '', body)
         body = json.loads(body)
     return body
+
+
+def getOsign(user,osignList):
+    paraPand = ''
+    for para in osignList:
+        paraPand += str(user[para])
+    return md5(paraPand)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8*-
 
 import unittest
-from api_demo.api_manage.login import login_osign,login
+from api_demo.api_manage.login import login_osign,login,osign_list
 
 code_success = 200
 msg_success = 'success!'
@@ -60,33 +60,25 @@ class mytest(unittest.TestCase):
         self.assertEqual(result['code'],code_sign_error)
         self.assertEqual(result['msg'],msg_sign_error)
 
+    # 异常场景： 签名错误。
+    def test_login_osign_error(self):
+        osignFailCount = 0
+        for para in osign_list:
+            result = self.login_osign_error(para)
+            if not result:
+                osignFailCount += 1
+        print('osign para lenth : %d' % len(osign_list))
+        self.assertEqual(osignFailCount, 0)
 
-    # 异常场景：osign 错误。 userName
-    def test_login_osign_error_userName(self):
-        self.testuser=login_osign(self.testuser)
-        self.testuser['userName']=self.testuser['userName']+'1'
-        result =login(self.testuser,need_osign=False,isMock=isMock)
-        self.assertEqual(result['code'],code_sign_error)
-        self.assertEqual(result['msg'],msg_sign_error)
-
-
-    # 异常场景：osign 错误。 password
-    def test_login_osign_error_password(self):
-        self.testuser=login_osign(self.testuser)
-        self.testuser['password']=self.testuser['password']+'1'
-        result =login(self.testuser,need_osign=False,isMock=isMock)
-        self.assertEqual(result['code'],code_sign_error)
-        self.assertEqual(result['msg'],msg_sign_error)
-
-
-    # 异常场景：osign 错误。 verifyCode
-    def test_login_osign_error_verifyCode(self):
-        self.testuser=login_osign(self.testuser)
-        self.testuser['verifyCode']=self.testuser['verifyCode']+'1'
-        result =login(self.testuser,need_osign=False,isMock=isMock)
-        self.assertEqual(result['code'],code_sign_error)
-        self.assertEqual(result['msg'],msg_sign_error)
-
+    def login_osign_error(self, para):
+        self.testuser = login_osign(self.testuser)
+        self.testuser[para] = self.testuser[para] + '1'
+        result = login(self.testuser, need_osign=False,isMock=isMock)
+        if result['code'] == code_sign_error and result['msg'] == msg_sign_error:
+            return True
+        else:
+            print('osign error : %s, %s' % (para, result))
+            return False
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

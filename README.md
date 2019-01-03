@@ -7,7 +7,7 @@
 - 下载源码。
 - 安装 requirements
 - 运行 run.bat/ run.sh 文件开始执行。
-- 报告生成： 打开 api_demo.allurereport.html  下的 index.html 文件查看 allure 报告。（需要安装 allure ）
+- 报告生成：每次运行会生成新的报告目录， 打开 api_demo/allurereport/时间日期/html  下的 index.html 文件查看 allure 报告。（需要安装 allure ）
 
 ![example1](cmd.png "example1")
 
@@ -21,9 +21,17 @@ api_demo.api_manage.login 示例如何为登录接口进行签名、拼接参数
 #### 使用说明： 按照实际待测试的接口定义进行修改。
 
 ```
-def login_osign(user):   # 签名方法，例如签名方法为 username+password+verifycode 做md5 。  具体需要替换为实际的签名方法。
-    user['osign'] = util.md5(user['userName']+user['password']+user['verifyCode'] )
+osign_list = ['userName', 'password','verifyCode']    # 定义签名参数列表，例如签名方法为 username+password+verifycode 做md5 。  具体需要替换为实际的签名参数列表。
+
+def login_osign(user):   # 签名方法。  这里举例是进行 MD5 加密， 具体需要替换为实际的签名方法。
+    user['osign'] = util.getOsign(user, osign_list)
     return user
+
+def getOsign(user,osignList):
+    paraPand = ''
+    for para in osignList:
+        paraPand += str(user[para])
+    return md5(paraPand)
 
 def login(user,need_osign = True,isMock=False):     # 具体的接口url 拼接、参数生成和发送方法
     url = '/login'
