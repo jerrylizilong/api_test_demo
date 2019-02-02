@@ -1,7 +1,13 @@
 # -*- coding: utf-8*-
 
 import unittest
-from api_demo.api_manage.login import login_osign,login,osign_list
+from api_demo.api_manage.api_base import getOsign,api_send
+import pytest
+from api_demo import environmentFlag
+
+isMock = True    # 如果不需要使用 mock ，直接使用接口，此处改为 False
+osign_list = ['userName', 'password','verifyCode']    # 定义签名参数列表，例如签名方法为 username+password+verifycode 做md5 。  具体需要替换为实际的签名参数列表。
+url = '/login'    # 具体的接口 url 相对路径， 测试时会拼凑为完整路径：  http://host/login
 
 code_success = 200
 msg_success = 'success!'
@@ -12,7 +18,6 @@ msg_sign_error = 'invalid request!'
 code_login_fail = 500
 msg_login_fail = 'username or password is wrong ,please try again!'
 
-isMock = True    # 如果不需要使用 mock ，直接使用接口，此处改为 False
 
 class mytest(unittest.TestCase):
     @classmethod
@@ -32,23 +37,25 @@ class mytest(unittest.TestCase):
 
     # 正常场景：login 是否成功。
     def test_login(self):
-        result =login(self.testuser,isMock=isMock)
+        result =api_send(self.testuser,osign_list,url,isMock=isMock)
         self.assertEqual(result['code'],code_success)
         self.assertEqual(result['msg'],msg_success)
 
-
+    @pytest.mark.skipif(environmentFlag =='1', reason='skip')
     # 异常场景： userName错误。
     def test_login_wrong_userName(self):
+        print(environmentFlag =='1')
+        print('evironment is : ',environmentFlag)
         self.testuser['userName']='username'
-        result = login(self.testuser, isMock=isMock)
+        result = api_send(self.testuser,osign_list,url,isMock=isMock)
         self.assertEqual(result['code'],code_login_fail)
         self.assertEqual(result['msg'],msg_login_fail)
 
-
+    @pytest.mark.skipif(isMock , reason='skip')
     # 异常场景： password错误。
     def test_login_wrong_password(self):
         self.testuser['password']='password'
-        result = login(self.testuser, isMock=isMock)
+        result = api_send(self.testuser,osign_list,url,isMock=isMock)
         self.assertEqual(result['code'],code_login_fail)
         self.assertEqual(result['msg'],msg_login_fail)
 
@@ -56,29 +63,14 @@ class mytest(unittest.TestCase):
     # 异常场景： verifyCode错误。
     def test_login_wrong_verifyCode(self):
         self.testuser['verifyCode']='123455'
-        result = login(self.testuser, isMock=isMock)
+        result = api_send(self.testuser,osign_list,url,isMock=isMock)
         self.assertEqual(result['code'],code_sign_error)
         self.assertEqual(result['msg'],msg_sign_error)
 
     # 异常场景： 签名错误。
     def test_login_osign_error(self):
-        osignFailCount = 0
-        for para in osign_list:
-            result = self.login_osign_error(para)
-            if not result:
-                osignFailCount += 1
-        print('osign para lenth : %d' % len(osign_list))
-        self.assertEqual(osignFailCount, 0)
-
-    def login_osign_error(self, para):
-        self.testuser = login_osign(self.testuser)
-        self.testuser[para] = self.testuser[para] + '1'
-        result = login(self.testuser, need_osign=False,isMock=isMock)
-        if result['code'] == code_sign_error and result['msg'] == msg_sign_error:
-            return True
-        else:
-            print('osign error : %s, %s' % (para, result))
-            return False
+        from api_demo.api_manage import api_base
+        self.assertEqual(api_base.test_osign_error(self.testuser,osign_list,url,code_sign_error,msg_sign_error,isMock=isMock), 0)
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
