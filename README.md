@@ -1,14 +1,14 @@
 # api_test_demo
 
 ## 简介
-整理如何用 unittest 编写接口测试用例，和使用 pytest+allure 生成报表。
+整理如何用 pytest 编写接口测试用例，使用 pytest+allure 生成报表。
 每个接口只需要写上接口地址、加密参数列表，即可快速编写对应的测试用例。
 
 ## 如何运行
 - 下载源码。
 - 安装 requirements
 - 运行 run.bat/ run.sh 文件开始执行。
-- 报告生成：每次运行会生成新的报告目录， 打开 api_demo/allurereport/时间日期/html  下的 index.html 文件查看 allure 报告。（需要安装 allure ）
+- 报告生成：每次运行会生成新的报告目录， 打开 api_demo/allure-report/时间日期/html  下的 index.html 文件查看 allure 报告。（需要安装 allure ）
 
 ![example1](cmd.png "example1")
 
@@ -91,40 +91,76 @@ isMock = True    # 如果不需要使用 mock ，直接使用接口，此处改�
 osign_list = ['userName', 'password','verifyCode']    # 定义签名参数列表，例如签名方法为 username+password+verifycode 做md5 。  具体需要替换为实际的签名参数列表。
 url = '/login'    # 具体的接口 url 相对路径， 测试时会拼凑为完整路径：  http://host/login
 ```
-#### 根据实际场景编写对应测试用例
+#### conftest 文件配置初始化
 
 ```
-def setUp(self):
-    import warnings
-    warnings.simplefilter("ignore", ResourceWarning)
-    print("start")
+import pytest
+@pytest.fixture(scope='module')
+def init_test_user():
 
     # 通用参数初始化
-    self.testuser = {}
-    self.testuser['userName']='correctuser'
-    self.testuser['password']='correctpassword'
-    self.testuser['verifyCode']='123456'
-
-# 正常场景：login 是否成功。
-def test_login(self):
-    result =login(self.testuser,isMock=True)
-    self.assertEqual(result['code'],code_success)
-    self.assertEqual(result['msg'],msg_success)
-
-
-# 异常场景： userName错误。
-def test_login_wrong_userName(self):
-    self.testuser['userName']='username'
-    result = login(self.testuser, isMock=True)
-    self.assertEqual(result['code'],code_login_fail)
-    self.assertEqual(result['msg'],msg_login_fail)
-
-# 异常场景： 签名错误。
-def test_login_osign_error(self):
-    from api_demo.api_manage import api_base
-    self.assertEqual(api_base.test_osign_error(self.testuser,osign_list,url,code_sign_error,msg_sign_error,isMock=isMock), 0)
+    testuesr = {}
+    testuesr['userName']='correctuser'
+    testuesr['password']='correctpassword'
+    testuesr['verifyCode']='123456'
+    return testuesr
 
 ```
+
+#### 具体测试方法如下：
+```commandline
+
+# 正常场景：login 是否成功。
+def test_login(init_test_user):
+    testuesr = init_test_user
+    result =api_send(testuesr,osign_list,url,isMock=isMock)
+    assert result['code']==code_success
+    assert result['msg']==msg_success
+
+@pytest.mark.skipif(environmentFlag =='1', reason='skip')
+# 异常场景： userName错误。
+def test_login_wrong_userName(init_test_user):
+    testuesr = init_test_user
+    print(environmentFlag =='1')
+    print('evironment is : ',environmentFlag)
+    testuesr['userName']='username'
+    result = api_send(testuesr,osign_list,url,isMock=isMock)
+    assert result['code'] == code_login_fail
+    assert result['msg'] == msg_login_fail
+
+@pytest.mark.skipif(isMock is False , reason='skip')
+# 异常场景： password错误。
+def test_login_wrong_password(init_test_user):
+    testuesr = init_test_user
+    testuesr['password']='password'
+    result = api_send(testuesr,osign_list,url,isMock=isMock)
+    assert result['code'] == code_login_fail
+    assert result['msg'] == msg_login_fail
+
+
+# 异常场景： verifyCode错误。
+def test_login_wrong_verifyCode(init_test_user):
+    testuesr = init_test_user
+    testuesr['verifyCode']='123455'
+    result = api_send(testuesr,osign_list,url,isMock=isMock)
+    assert result['code'] == code_sign_error
+    assert result['msg'] == msg_sign_error
+
+# 异常场景： 签名错误。
+def test_login_osign_error(init_test_user):
+    testuesr = init_test_user
+    from api_demo.api_manage import api_base
+    assert api_base.test_osign_error(testuesr,osign_list,url,code_sign_error,msg_sign_error,isMock=isMock)== 0
+
+```
+
+参数化：
+```commandline
+@pytest.mark.parametrize("user", valid_user)
+def test_login_para(init_test_user,user):
+    print(user)
+```
+
 
 通用的签名错误校验方法：
 ```
@@ -163,21 +199,9 @@ run_pytest_entry.py 、 run_pytest.py
 ```
 @pytest.mark.skipif(environmentFlag =='1', reason='skip')   # 如果environmentFlag =='1'， 跳过
 # 异常场景： userName错误。
-def test_login_wrong_userName(self):
-    print(environmentFlag =='1')
-    print('evironment is : ',environmentFlag)
-    self.testuser['userName']='username'
-    result = api_send(self.testuser,osign_list,url,isMock=isMock)
-    self.assertEqual(result['code'],code_login_fail)
-    self.assertEqual(result['msg'],msg_login_fail)
-
+ 
 @pytest.mark.skipif(isMock , reason='skip')     # 如果 isMock 为 true， 跳过
 # 异常场景： password错误。
-def test_login_wrong_password(self):
-    self.testuser['password']='password'
-    result = api_send(self.testuser,osign_list,url,isMock=isMock)
-    self.assertEqual(result['code'],code_login_fail)
-    self.assertEqual(result['msg'],msg_login_fail)
 
 ```
 
@@ -196,7 +220,24 @@ elif environmentFlag=='3':
 
 ### 6. 命令行执行：run.bat/run.sh
 
+```commandline
 python run_pytest_entry.py 1
 
+```
+
 其中最后的参数 1 为 environmentFlag， 如果需要切换不同的测试环境，只需传入不同的标记位。
+
+### 7. 其他插件使用
+
+```commandline
+ # pytest
+ os.system('python -m pytest %s -n 3 --reruns 2 --dist=load --alluredir=%s -o log_cli=true -o log_cli_level=INFO' %(test_folder,report_path))
+ # allure
+ os.system('allure generate %s -o %s -c' %(report_path,allure_report_path))
+```
+pytest xdist 插件： 
+用于多线程并发执行
+-n 3 指定3个线程执行。
+
+pytest rerunfailures 插件，通过 --reruns 2 指定失败重试的次数
 
