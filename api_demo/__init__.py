@@ -1,4 +1,4 @@
-environmentFlag='1'
+environmentFlag='2'
 
 if environmentFlag=='1':
     host = 'http://test1.com'

@@ -1,6 +1,7 @@
-allure-pytest==2.5.2
-allure-python-commons==2.5.2
-pytest==3.7.1
-pytest-html==1.19.0
-pytest-metadata==1.7.0
-httplib2==0.10.3
+allure-pytest==2.9.45
+allure-python-commons==2.9.45
+pytest==7.0.1
+requests==2.22.0
+pytest-xdist==1.32.0
+pytest-rerunfailures==10.2
+retry==0.9.2
