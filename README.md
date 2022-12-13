@@ -10,8 +10,9 @@
 - 运行 run.bat/ run.sh 文件开始执行。
 - 报告生成：每次运行会生成新的报告目录， 打开 api_demo/allure-report/时间日期/html  下的 index.html 文件查看 allure 报告。（需要安装 allure ）
 
+<img alt="example1" src="allure_report.png" title="example1"/>
 
-![example2](allure_report.png "example2")
+<img alt="example2" src="pytest.jpeg" title="example2"/>
 
 ## 结构介绍
 
